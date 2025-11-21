@@ -1,0 +1,39 @@
+1. Geração procedural da ilha (a gente decidiu fazer o game com voxels, tipo o game novo do pokemon)
+2. Árvores lowpolly com ui de coleta igual o do video https://youtu.be/j7_MUe1ORnE?si=fJlL5SSjnt3X3WZQ&t=14
+3. Um farol so de role pra ajudar na navegação
+4. Agua do mar, pode ser uma foam bem chuleba so nas edges e uma corzinha bonita com normalmap
+5. Sombras PCF
+6. Cubemap de ceu bem bonito que nem o do vídeo
+7. Fogo com sistema de particula (meio voxel)
+8. Tools em primeira pessoa
+9. CO-OP
+
+# Engine notes:
+@rendering folder
+- asset manager: texture, shader, models hashmap with string (can have static shaders definitions cuz those can be used on bellow modules directly)
+- scene: models, frustum, dirlight, skybox, visible models, camera
+- forward_renderer: renderFullStage, renderVisibles, updateDirlightShadowmap
+- shader
+- skybox
+- texture
+- mesh: vector normals, vertices, indices, textures...
+- model: meshs and material, load tinygltf
+- material: pbr
+- geometry: aabb, plane, frustum
+- mesh_repo: plane, cube, triangle
+- framebuffer
+- light: directional (onlyu for now) -> shadowmap (framebuffer), direction, strength, color, shadowres
+
+@platform
+- window: glfw window stuff
+- input: namespace only. input::isPressed input::isDown glm::vec2 input::getMouse input::_glfwCallback...
+
+@on main.cpp
+- load asset manager
+- load model data/tree.gltf
+- add plane on ground
+- add things to scene
+- window and input callbacks
+- loop
+- update inputs
+- render scene
