@@ -7,6 +7,8 @@ Chunk.VOXEL_VOID = 0
 Chunk.VOXEL_AIR = 1
 Chunk.VOXEL_DIRT = 2
 Chunk.VOXEL_DIRT_GRASS = 3
+Chunk.VOXEL_STONE = 4	
+Chunk.VOXEL_SAND = 5
 
 local NOISE_SMOOTHNESS = 20
 local AO_CURVE = { 1.0, 0.8, 0.6, 0.4 }

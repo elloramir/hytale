@@ -58,6 +58,8 @@ function Assets.load()
     Assets.voxelAtlas = {
         [Chunk.VOXEL_DIRT_GRASS] = create(14, 43, 52),
         [Chunk.VOXEL_DIRT] = create(52, 52, 52),
+        [Chunk.VOXEL_STONE] = create(39, 39, 39),
+        [Chunk.VOXEL_SAND] = create(57, 57, 57),
     }
 
 	Lume.trace(("Assets loaded: %d"):format(Lume.count(Assets.loaded)))

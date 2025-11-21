@@ -28,6 +28,7 @@ function Game.update(dt)
 		local entity = entities[i]
 
 		if not entity.isAlive then
+			print("remove", entity.isAlive)
 			table.remove(Game.entities, i)
 		else
 			entity:update(dt)

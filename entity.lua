@@ -12,7 +12,7 @@ end
 function Entity:update(dt)
 end
 
-function Entity:draw3d(shader)
+function Entity:draw3d()
 end
 
 function Entity:draw2d()

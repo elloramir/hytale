@@ -1,7 +1,28 @@
-Terrain = Object:extend()
+Terrain = Entity:extend()
 
 function Terrain:new()
-	self.chunks = { }
+	Entity.new(self)
+
+	self.chunks = {}
+
+	self.chunksX = 2
+	self.chunksY = 2
+
+	self.islandCenterX = 0
+	self.islandCenterZ = 0
+
+	self.islandRadius = (self.chunksX / 2) * Chunk.SIZE
+
+	local startX = -math.floor(self.chunksX / 2)
+	local startZ = -math.floor(self.chunksY / 2)
+	local endX = startX + self.chunksX - 1
+	local endZ = startZ + self.chunksY - 1
+
+	for i = startX, endX do
+		for j = startZ, endZ do
+			self:generateChunk(i, j)
+		end
+	end
 end
 
 function Terrain.getIndex(x, z)
@@ -29,7 +50,7 @@ end
 
 function Terrain:generateChunk(x, z)
 	if not self:getChunk(x, z) then
-		local chunk = Game.addEntity(Chunk(x, z, self));
+		local chunk = Chunk(x, z, self);
 
 		self.chunks[Terrain.getIndex(x, z)] = chunk
 
@@ -43,5 +64,11 @@ function Terrain:generateChunk(x, z)
 		if c1 then c1:generateMesh() end
 		if c2 then c2:generateMesh() end
 		if c3 then c3:generateMesh() end
+	end
+end
+
+function Terrain:draw3d()
+	for _, chunk in pairs(self.chunks) do
+		chunk:draw3d()
 	end
 end

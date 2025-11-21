@@ -12,9 +12,9 @@ require("sheet")
 require("model")
 require("entity")
 require("game")
-require("terrain")
 require("ens.chunk")
 require("ens.player")
+require("ens.terrain")
 require("assets")
 
 
@@ -31,12 +31,7 @@ function love.load()
 	Game.init()
 	Game.resizeScreen(love.graphics:getDimensions())
 	Game.addEntity(Player(10, 10, 10))
-
-	local terrain = Terrain()
-	terrain:generateChunk(0, 0)
-	terrain:generateChunk(1, 0)
-	terrain:generateChunk(0, 1)
-	terrain:generateChunk(1, 1)
+	Game.addEntity(Terrain())
 end
 
 function love.resize(width, height)
