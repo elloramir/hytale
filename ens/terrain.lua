@@ -2,6 +2,11 @@ Terrain = Entity:extend()
 
 function Terrain:new()
 	Entity.new(self)
+
+	-- Singleton
+	assert(not Terrain.instance)
+	Terrain.instance = self
+
 	self.chunks = {}
 	self.chunksX = 4
 	self.chunksY = 4

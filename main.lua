@@ -30,7 +30,7 @@ function love.load()
 
 	Game.init()
 	Game.resizeScreen(love.graphics:getDimensions())
-	Game.addEntity(Player(10, 10, 10))
+	Game.addEntity(Player(0, 10, 0))
 	Game.addEntity(Terrain())
 end
 
