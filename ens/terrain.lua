@@ -2,22 +2,19 @@ Terrain = Entity:extend()
 
 function Terrain:new()
 	Entity.new(self)
-
 	self.chunks = {}
-
-	self.chunksX = 2
-	self.chunksY = 2
-
-	self.islandCenterX = 0
-	self.islandCenterZ = 0
-
-	self.islandRadius = (self.chunksX / 2) * Chunk.SIZE
-
+	self.chunksX = 4
+	self.chunksY = 4
+	self.radius = (self.chunksX / 2) * Chunk.SIZE
+	
 	local startX = -math.floor(self.chunksX / 2)
 	local startZ = -math.floor(self.chunksY / 2)
 	local endX = startX + self.chunksX - 1
 	local endZ = startZ + self.chunksY - 1
-
+	
+	self.centerX = ((startX + endX) / 2) * Chunk.SIZE + Chunk.SIZE / 2
+	self.centerZ = ((startZ + endZ) / 2) * Chunk.SIZE + Chunk.SIZE / 2
+	
 	for i = startX, endX do
 		for j = startZ, endZ do
 			self:generateChunk(i, j)
@@ -52,18 +49,20 @@ function Terrain:generateChunk(x, z)
 	if not self:getChunk(x, z) then
 		local chunk = Chunk(x, z, self);
 
-		self.chunks[Terrain.getIndex(x, z)] = chunk
+		if chunk.hasData then
+			self.chunks[Terrain.getIndex(x, z)] = chunk
 
-		-- Update neigbours chunks
-		local c0 = self:getChunk(x - 1, z)
-		local c1 = self:getChunk(x + 1, z)
-		local c2 = self:getChunk(x, z - 1)
-		local c3 = self:getChunk(x, z + 1)
+			-- Update neigbours chunks
+			local c0 = self:getChunk(x - 1, z)
+			local c1 = self:getChunk(x + 1, z)
+			local c2 = self:getChunk(x, z - 1)
+			local c3 = self:getChunk(x, z + 1)
 
-		if c0 then c0:generateMesh() end
-		if c1 then c1:generateMesh() end
-		if c2 then c2:generateMesh() end
-		if c3 then c3:generateMesh() end
+			if c0 then c0:generateMesh() end
+			if c1 then c1:generateMesh() end
+			if c2 then c2:generateMesh() end
+			if c3 then c3:generateMesh() end
+		end
 	end
 end
 

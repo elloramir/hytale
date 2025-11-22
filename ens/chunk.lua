@@ -10,7 +10,7 @@ Chunk.VOXEL_DIRT_GRASS = 3
 Chunk.VOXEL_STONE = 4	
 Chunk.VOXEL_SAND = 5
 
-local NOISE_SMOOTHNESS = 20
+local NOISE_SMOOTHNESS = 10
 local AO_CURVE = { 1.0, 0.8, 0.6, 0.4 }
 
 function Chunk:new(x, z, terrain)
@@ -25,6 +25,8 @@ function Chunk:new(x, z, terrain)
 	self.texture = Assets.get("sprites/basic")
 	self.terrain = terrain
 	self.data = {}
+
+	self.hasData = true
 
 	self:generateData()
 	self:generateMesh()
@@ -51,27 +53,96 @@ function Chunk:isTransparent(x, y, z)
 	return voxel == Chunk.VOXEL_AIR
 end
 
+function Chunk:fill(voxel)
+	for i = 0, (Chunk.SIZE * Chunk.SIZE * Chunk.HEIGHT) - 1 do
+		self.data[i] = voxel
+	end
+end
+
 function Chunk:generateData()
+	local radius = self.terrain.radius
+	local sandPercent = 0.30
+	local sandThickness = math.max(1, radius * sandPercent)
+	
+	local centerX = self.terrain.centerX
+	local centerZ = self.terrain.centerZ
+	
+	self:fill(Chunk.VOXEL_AIR)
+	
 	for x = 0, Chunk.SIZE - 1 do
 		for z = 0, Chunk.SIZE - 1 do
-			local noiseX = (self.absX + x) / NOISE_SMOOTHNESS;
-			local noiseZ = (self.absZ + z) / NOISE_SMOOTHNESS;
-			local value = love.math.noise(noiseX, noiseZ)
-			local height = math.floor(value * Chunk.HEIGHT)
-
-			for y = 0, Chunk.HEIGHT - 1 do
-				local index = Chunk.getIndex(x, y, z)
-
-				if y >= height then
-					self.data[index] = Chunk.VOXEL_AIR
-				elseif y == height - 1 then
-					self.data[index] = Chunk.VOXEL_DIRT_GRASS
+			local absx = self.absX + x
+			local absz = self.absZ + z
+			local noiseX = absx / NOISE_SMOOTHNESS
+			local noiseZ = absz / NOISE_SMOOTHNESS
+			
+			---------------------------------------------------------------------
+			-- TERRAIN BASE: LARGE CANYONS AND CONTINUOUS FORMS
+			---------------------------------------------------------------------
+			local base = love.math.noise(noiseX * 0.15, noiseZ * 0.15)
+			local canyonNoise = love.math.noise(noiseX * 0.2, noiseZ * 0.2)
+			local canyon = math.abs(canyonNoise - 0.5) * 1.4
+			local combined = base - canyon * 0.55
+			combined = combined * combined
+			local plateau = math.max(0, math.min(1, combined * 2.2))
+			local height = math.floor(plateau * Chunk.HEIGHT)
+			
+			---------------------------------------------------------------------
+			-- ISLAND FORMAT: CIRCULAR, BUT WITH PROCEDURAL CUTOUTS
+			---------------------------------------------------------------------
+			local shapeFreq1 = 0.02
+			local shapeFreq2 = 0.08
+			local shapeAmp1 = 0.28
+			local shapeAmp2 = 0.08
+			local minRadiusFactor = 0.55
+			
+			local shapeNoise =
+				love.math.noise(noiseX * shapeFreq1, noiseZ * shapeFreq1) * 0.7 +
+				love.math.noise(noiseX * shapeFreq2, noiseZ * shapeFreq2) * 0.3
+			shapeNoise = (shapeNoise - 0.5) * 2
+			
+			-- Slight jitter only for the coastline (breaks straight lines)
+			local shoreJitterFreq = 0.2   -- jitter frequency (higher = more fine ripples)
+			local shoreJitterAmp  = 0.08  -- amplitude relative to the radius (adjust up/down)
+			local shoreJitter =
+				(love.math.noise(noiseX * shoreJitterFreq + 437.13, noiseZ * shoreJitterFreq + 913.37) - 0.5) * 2
+			
+			local localRadius = radius * (1 + shapeNoise * shapeAmp1 + (shapeNoise * 0.5) * shapeAmp2)
+			localRadius = localRadius + shoreJitter * (radius * shoreJitterAmp)
+			localRadius = math.max(localRadius, radius * minRadiusFactor)
+			
+			---------------------------------------------------------------------
+			-- CALCULATE DISTANCE FROM THE CORRECT CENTER OF THE ISLAND
+			---------------------------------------------------------------------
+			local dx = absx - centerX
+			local dz = absz - centerZ
+			local dist = math.sqrt(dx * dx + dz * dz)
+			
+			---------------------------------------------------------------------
+			-- COMPARISON WITH DISTANCE, SAND IN UNITS
+			---------------------------------------------------------------------
+			if dist < localRadius then
+				-- beach: if it is within the sand thickness range
+				if dist >= (localRadius - sandThickness) then
+					-- place sand only in the top layer (y == 0)
+					self.data[Chunk.getIndex(x, 0, z)] = Chunk.VOXEL_SAND
 				else
-					self.data[index] = Chunk.VOXEL_DIRT
-				end
-
-				if y == 0 then
-					self.data[index] = Chunk.VOXEL_DIRT_GRASS
+					-----------------------------------------------------------------
+					-- VERTICAL FILLING OF THE TERRAIN (INTERIOR)
+					-----------------------------------------------------------------
+					for y = 0, Chunk.HEIGHT - 1 do
+						local index = Chunk.getIndex(x, y, z)
+						if y >= height then
+							self.data[index] = Chunk.VOXEL_AIR
+						elseif y == height - 1 then
+							self.data[index] = Chunk.VOXEL_DIRT_GRASS
+						else
+							self.data[index] = Chunk.VOXEL_DIRT
+						end
+						if y == 0 then
+							self.data[index] = Chunk.VOXEL_DIRT_GRASS
+						end
+					end
 				end
 			end
 		end
@@ -99,8 +170,12 @@ function Chunk:generateMesh()
 		end
 	end
 
-	self.model = Model(vertices, Assets.get("sprites/basic").img)
-	self.model.transform:translate(Vector(self.absX, 0, self.absZ))
+	if #vertices > 0 then
+		self.model = Model(vertices, Assets.get("sprites/basic").img)
+		self.model.transform:translate(Vector(self.absX, 0, self.absZ))
+	else
+		self.hasData = false
+	end
 end
 
 function Chunk.vertexAO(side1, side2, corner)

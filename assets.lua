@@ -35,8 +35,8 @@ function Assets.load()
             
             Assets.loaded[name] = Sheet(filename, w, h)
 
-        elseif ext == "frag" then
-            Assets.loaded[name] = love.graphics.newShader(filename)
+        elseif ext == "shader" then
+            -- Assets.loaded[name] = love.graphics.newShader(filename)
 		end
 	end)
 

@@ -49,7 +49,7 @@ end
 
 function Game.draw()
 	love.graphics.setCanvas(Game.screenBind)
-	love.graphics.clear()
+	love.graphics.clear(0.3, 0.6, 0.9)
 
 	for _, entity in ipairs(Game.entities) do
 		entity:draw3d()
